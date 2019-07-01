@@ -65,7 +65,7 @@ def StoreLocalValue(node):
 functions['StoreLocalValue'] = StoreLocalValue
 
 def Return_value(node):
-    value = node['value'] if ('type' in list(node.keys())) and (node['type']=='Return') and ('value' in list(node.keys())) and (type(node['value'])==int) else 0
+    value = node['value'] if ('type' in list(node.keys())) and (node['type']=='Return') and ('value' in list(node.keys())) and (isinstance(node['value'], int)) else 0
     return value 
 functions['Return_value'] = Return_value
 

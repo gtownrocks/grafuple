@@ -3,6 +3,7 @@
 
 """
 
+from builtins import map
 import numpy as np
 
 # list node types
@@ -17,9 +18,9 @@ Functions = {key:[] for key in nodeTypes}
 # indicator function for each type
 def ExpectedType(*args):
     return 1.0
-map(lambda x: Functions[x].append(ExpectedType),nodeTypes)
+map(lambda x: Functions[x].append(ExpectedType), nodeTypes)
 
-          
+
 # if node is of a certain type return transformed string based on that node type
 def CLRVariable(*args):
     return np.log10(max(1,abs(hash(args[0]['varType']))))
@@ -72,9 +73,9 @@ Functions['CLRArray'].append(CLRArraysize)
 
 
 # if node type is of a certain type return numerical value based on that node type
-def NumPass2Call(*args):           
+def NumPass2Call(*args):
     return len(args[0]['arguments'])
-Functions['Call'].append(NumPass2Call)  
+Functions['Call'].append(NumPass2Call)
 
 def AddressOf(*args):
     return float(args[0]['expr'])
@@ -98,7 +99,7 @@ Functions['StoreLocal'].append(StoreLocalvalue)
 
 def Returnvalue(*args):
     V = args[0]['value']
-    if type(V) is dict:
+    if isinstance(V, dict):
         return 0
     else:
         return float(V)

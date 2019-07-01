@@ -1,3 +1,7 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from builtins import object
+from builtins import str
 import ujson as json
 import numpy as np
 import time
@@ -7,8 +11,8 @@ import signal
 import json
 
 from pandas import DataFrame
-from graphdualvs import GraphDualVS
-from DualVecStable import Functions
+from .graphdualvs import GraphDualVS
+from .DualVecStable import Functions
 from sklearn.externals import joblib
 from scipy import stats
 
@@ -74,7 +78,7 @@ class PageRankRandomForest(object):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
 
-        # timeout exception and alarm handling 
+        # timeout exception and alarm handling
         signal.signal(signal.SIGALRM, alarm_handler)
         TIMEOUT=10
         signal.alarm(TIMEOUT)
@@ -130,8 +134,8 @@ class PageRankRandomForest(object):
 
     @classmethod
     def graph_vectorizer(cls, decompiled):
-        """ Method for converting a decompiled .NET file in the form of a json to a feature vector based on 
-            computing expected values of functions defined on the vertex sets of certain graphs obtained 
+        """ Method for converting a decompiled .NET file in the form of a json to a feature vector based on
+            computing expected values of functions defined on the vertex sets of certain graphs obtained
             through decompilation
 
             Args:
@@ -152,7 +156,7 @@ class PageRankRandomForest(object):
 
             # class which implements most of the methods involved in vectorization
             G_star = extra_data['G_star']
-            
+
             # feature names
             extra_columns = extra_data['columns']
 
@@ -170,9 +174,9 @@ class PageRankRandomForest(object):
                 if raw_graphs[key]['status']['result']=='success':
                     if len(raw_graphs[key]['sdfg:json']['nodes'])>0:
                         graphs[hash_val+'_'+key] = raw_graphs[key]['sdfg:json']
-            
+
             # instantiate dataframe to contain vectorized graphs for current json
-            indices = graphs.keys()
+            indices = list(graphs.keys())
             columns = G_star.frame_keys + extra_columns
             df = DataFrame(np.zeros((len(indices),len(columns))),index=indices,columns=columns)
 
@@ -190,29 +194,29 @@ class PageRankRandomForest(object):
                 GraphData = dict()
 
                 # Compute number of nodes to instantiate the incidence matrix
-                Nkeys = len(nodes.keys())
+                Nkeys = len(list(nodes.keys()))
                 GraphData['Nkeys'] = Nkeys
-               
+
                 # choose measure - pagerank in this case and compute dual smoothings
                 measure = nx.pagerank(nx.DiGraph(G['edges']))
-                F = G_star.lebesgue_smooth_dual_vecs(G,measure)
-                
-                # pagerank values 
+                F = G_star.lebesgue_smooth_dual_vecs(G, measure)
+
+                # pagerank values
                 GraphData['PageRankEntropy'] = stats.entropy(np.array(measure.values()))
 
                 # merge page rank and topology dictionaries
                 GraphData.update(F)
-                
+
                 # place vectorized graph into json-level dataframe
                 df.loc[key] = flatten_dict(GraphData)
 
-            
+
             # replace nans with zeros so that mean/std/etc can be computed
             df.fillna(value=0)
 
             # add hash column so that we can group graphs by mean and standard deviation
             df['id'] = [u[:str(u).index('_')] for u in df.index]
-           
+
             # compute mean and standard deviations of computed values for each hash (many graphs per hash)
             df_grouped_mean = df.groupby('id')[columns].mean().fillna(value=0)
             df_grouped_std = df.groupby('id')[columns].std().fillna(value=0)
@@ -231,17 +235,17 @@ class PageRankRandomForest(object):
             df = df_grouped_mean.join(df_grouped_std)
             df = df.join(Nkeys_grouped_max)
 
-            # if vector is empty, replace with zeros 
-            if df.shape[0]==0: 
+            # if vector is empty, replace with zeros
+            if df.shape[0]==0:
 
                 df = df.append(DataFrame(np.zeros((1,df.shape[1])),columns=df.columns,index=[hash_val]))
 
             # output name of file and time it took to vectorize
-            print (hash_val,time.time()-t)
+            print((hash_val, time.time()-t))
 
         # throw if something failed in the vectorization process
         except Exception as e:
-            print e
+            print(e)
             return None
 
         # return location of resulting vector
@@ -249,8 +253,8 @@ class PageRankRandomForest(object):
 
     @classmethod
     def graph_vectorizer_parallel(self, decompiled):
-        """ Method for converting a decompiled .NET file in the form of a json to a feature vector based on 
-            computing expected values of functions defined on the vertex sets of certain graphs obtained 
+        """ Method for converting a decompiled .NET file in the form of a json to a feature vector based on
+            computing expected values of functions defined on the vertex sets of certain graphs obtained
             through decompilation
 
             Args:

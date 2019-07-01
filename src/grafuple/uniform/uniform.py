@@ -1,3 +1,8 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from past.utils import old_div
 import ujson as json
 import os
 import numpy as np
@@ -6,8 +11,8 @@ import time
 import glob
 from multiprocessing import Pool,cpu_count,Manager
 import joblib
-from functions import functions 
-from pandas import DataFrame,Series
+from .functions import functions
+from pandas import DataFrame, Series
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, precision_score, recall_score
@@ -119,13 +124,13 @@ def load_vecs(args):
 #vectorize_parallel('../../../../../../media2/ephemeral2/data/','../vectors/',functions)
 # ==================================================== Feature Table ==================================================
 
-# create table 
+# create table
 labels = joblib.load('../data/labels/labels_dict.jlb')
 files = glob.glob('../vectors/*jlb')#[:100000]
 mpd = Manager().dict()
 pool = Pool(cpu_count()-1)
 pool.map(load_vecs,[[mpd,file] for file in files])
-pool.close() 
+pool.close()
 pool.join()
 mpd = dict(mpd)
 vectors = DataFrame.from_dict(mpd,orient='index')
@@ -181,7 +186,7 @@ model.fit(X_train,y_train)
 # ==================================================== Score Model ==================================================
 
 
-y_true,y_pred = y_test,model.predict(X_test) 
+y_true,y_pred = y_test,model.predict(X_test)
 y_train,y_train_pred = y_train,model.predict(X_train)
 
 
@@ -190,7 +195,7 @@ recall = recall_score(y_true, y_pred)
 precision = precision_score(y_true, y_pred)
 n_P = sum(y)
 n_N = len(y) - sum(y)
-FPR = (recall*n_P*(1/precision - 1))/n_N
+FPR = old_div((recall*n_P*(old_div(1,precision) - 1)),n_N)
 FNR = 1 - recall
 
 
@@ -199,8 +204,8 @@ s = classification_report(y_true,y_pred,digits=4,target_names=['Malicious','Beni
 with open('./modeling_report.txt','w') as fif:
     fif.write('\n')
     fif.write(s)
-    fif.write('\nTrain Accuracy %0.6f\n' % (sum(y_train==y_train_pred)/y_train.shape[0]))
-    fif.write('Test Accuracy %0.6f\n' % (sum(y_test==y_pred)/y_test.shape[0]))
+    fif.write('\nTrain Accuracy %0.6f\n' % (old_div(sum(y_train==y_train_pred),y_train.shape[0])))
+    fif.write('Test Accuracy %0.6f\n' % (old_div(sum(y_test==y_pred),y_test.shape[0])))
 
     fif.write("FPR: %f, FNR: %f\n" % (FPR, FNR))
     fif.close()
@@ -210,7 +215,7 @@ print('\n')
 
 print(s)
 print('Train Accuracy %0.2f' % (sum(y_train==y_train_pred)/float(y_train.shape[0])))
-print('Test Accuracy %0.2f' % (sum(y_test==y_pred)/y_test.shape[0]))
+print('Test Accuracy %0.2f' % (old_div(sum(y_test==y_pred),y_test.shape[0])))
 print("FPR: %f, FNR: %f" % (FPR, FNR))
 
 
