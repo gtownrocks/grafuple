@@ -77,7 +77,6 @@ For a given file, decompilation produces several types of graph-structured data 
       each function, and a graph, called the sdfg, obtained by connecting all paths through the abstract
       syntax tree.
 
-## Specifics of sdfg
 
 Vectorization
 =============
